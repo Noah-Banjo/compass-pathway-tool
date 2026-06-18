@@ -1,7 +1,11 @@
 // Synthetic pathway/program archetypes for demonstration purposes.
-// These are representative program types modeled on real organizations —
-// NOT real program listings. Caseworkers must verify current availability,
-// eligibility, and terms before recommending any pathway to a survivor.
+// Regionally grounded in the Pacific Northwest (Seattle metro / King County),
+// reflecting real program types active in this ecosystem: BEST's Safe Jobs
+// Collaborative, WorkSource Seattle-King County, Edmonds College,
+// Renton Technical College, and related providers.
+// These are representative archetypes — NOT real program listings.
+// Caseworkers must verify current availability, eligibility, and terms
+// independently before recommending any pathway to a survivor.
 
 export const pathways = [
   {
@@ -35,8 +39,8 @@ export const pathways = [
       "Check current ITA funding availability for survivor's target program",
       "Ensure chosen training program is on approved ITA provider list",
     ],
-    region: "national",
-    organizationExample: "American Job Centers (nationwide)",
+    region: "Pacific Northwest / national",
+    organizationExample: "WorkSource Seattle-King County (americanjobcenter.org/worksource), WorkSource Renton, WorkSource Burien",
   },
   {
     id: "job-corps",
@@ -68,8 +72,8 @@ export const pathways = [
       "Identify nearest Job Corps center and current enrollment availability",
       "Request trauma-informed staff documentation from local center",
     ],
-    region: "national",
-    organizationExample: "Job Corps (nationwide, 120+ centers)",
+    region: "Pacific Northwest / national",
+    organizationExample: "Cascades Job Corps (Sedro-Woolley, WA) — nearest PNW residential center",
   },
   {
     id: "peer-support-specialist",
@@ -105,8 +109,8 @@ export const pathways = [
       "Identify local certification program and cost/funding",
       "Assess survivor's current stabilization level — role involves crisis exposure",
     ],
-    region: "national",
-    organizationExample: "SAMHSA-aligned programs, local behavioral health agencies",
+    region: "Pacific Northwest / national",
+    organizationExample: "Sound Mental Health, Crisis Connections, REACH peer program (King County)",
   },
   {
     id: "cna-training",
@@ -141,8 +145,8 @@ export const pathways = [
       "Assess survivor comfort with physical caregiving and close contact work",
       "Identify programs with WIOA funding or employer sponsorship",
     ],
-    region: "national",
-    organizationExample: "Community colleges, Red Cross, employer-sponsored programs",
+    region: "Pacific Northwest / national",
+    organizationExample: "Renton Technical College (CNA program), Highline College, Providence Health & Services employer sponsorship",
   },
   {
     id: "tech-cybersecurity",
@@ -175,8 +179,8 @@ export const pathways = [
       "Check if criminal record affects clearance eligibility for target roles",
       "Connect with Love Never Fails or similar survivor-specific tech programs",
     ],
-    region: "national",
-    organizationExample: "Love Never Fails, Google Career Certificates, CompTIA",
+    region: "Pacific Northwest / national",
+    organizationExample: "Love Never Fails (survivor-specific tech pathway), Apprenti (WA-based tech apprenticeship), Bellevue College cybersecurity program",
   },
   {
     id: "culinary-food-service",
@@ -207,8 +211,8 @@ export const pathways = [
       "Identify trauma-informed culinary programs vs. standard restaurant employment",
       "Check shift schedule compatibility with counseling/support appointments",
     ],
-    region: "national",
-    organizationExample: "Homeboy Industries, local community college culinary programs",
+    region: "Pacific Northwest",
+    organizationExample: "Renton Technical College culinary program, FareStart (Seattle — social enterprise restaurant, trauma-informed, survivor-adjacent employment model)",
   },
   {
     id: "remote-admin-data",
@@ -242,8 +246,8 @@ export const pathways = [
       "Identify safe, quiet workspace (housing stability required)",
       "Review platform-specific identity verification requirements",
     ],
-    region: "national",
-    organizationExample: "Remote job boards, Upwork, FlexJobs, nonprofit admin roles",
+    region: "Pacific Northwest / national (remote)",
+    organizationExample: "FlexJobs, Washington state nonprofit remote roles, King County government administrative openings (survivor-friendly HR policies)",
   },
   {
     id: "early-childhood-education",
@@ -274,8 +278,8 @@ export const pathways = [
       "Identify local CDA programs and funding",
       "Check Head Start center availability and hiring",
     ],
-    region: "national",
-    organizationExample: "Head Start, local childcare centers, NAEYC-affiliated programs",
+    region: "Pacific Northwest",
+    organizationExample: "King County Head Start (multiple sites), Child Care Resources (Bellevue), SEIU 925-affiliated childcare centers",
   },
   {
     id: "construction-trades",
@@ -311,8 +315,8 @@ export const pathways = [
       "Check drug testing requirements and timeline",
       "Assess transportation to variable job sites",
     ],
-    region: "national",
-    organizationExample: "IBEW, UA, Carpenters Union apprenticeship programs",
+    region: "Pacific Northwest",
+    organizationExample: "IBEW Local 46 (electrical, Seattle), UA Local 32 (plumbing), Washington State Apprenticeship and Training Council (WSATC) — trafficking survivors are a priority population under WA state workforce policy",
   },
   {
     id: "cosmetology-esthetics",
@@ -344,8 +348,8 @@ export const pathways = [
       "Assess comfort with physical touch in professional context",
       "Explore survivor-specific programs (e.g., Dress for Success adjacent programs)",
     ],
-    region: "national",
-    organizationExample: "State-licensed cosmetology schools, Paul Mitchell Schools",
+    region: "Pacific Northwest",
+    organizationExample: "Toni & Guy Hairdressing Academy (Seattle), Paul Mitchell The School (Renton), Clover Park Technical College esthetics program",
   },
   {
     id: "healthcare-billing-coding",
@@ -382,8 +386,8 @@ export const pathways = [
       "Discuss potential emotional impact of processing trauma-related medical records",
       "Confirm internet access and workspace for remote work",
     ],
-    region: "national",
-    organizationExample: "AAPC, community colleges, CareerStep online programs",
+    region: "Pacific Northwest / national (remote)",
+    organizationExample: "Edmonds College Health Information Technology program, Bellevue College medical coding certificate, CareerStep online (WIOA-fundable)",
   },
   {
     id: "microenterprise-self-employment",
@@ -420,8 +424,8 @@ export const pathways = [
       "Confirm survivor has sufficient stability for entrepreneurship demands",
       "Ensure income safety net (benefits, support) during ramp-up period",
     ],
-    region: "national",
-    organizationExample: "Accion Opportunity Fund, SBA Microloan, local CDFIs",
+    region: "Pacific Northwest",
+    organizationExample: "Craft3 (CDFI serving WA/OR), WSBI (Washington Small Business Institute), Seattle Good Business Network microenterprise support",
   },
   {
     id: "cdl-logistics",
@@ -458,8 +462,8 @@ export const pathways = [
       "Identify employer-sponsored programs that cover training costs",
       "Assess preference for regional vs. long-haul (proximity to support network)",
     ],
-    region: "national",
-    organizationExample: "C.R. England, Swift Transportation sponsored CDL, local trucking schools",
+    region: "Pacific Northwest",
+    organizationExample: "Renton Technical College CDL program, Pacific Truck Training (Auburn WA), Sysco / Amazon Freight employer-sponsored CDL (regional)",
   },
   {
     id: "safe-jobs-collaborative",
@@ -492,8 +496,8 @@ export const pathways = [
       "Match employer openings to survivor's skills and interests",
       "Brief employer on accommodation needs (without disclosing trafficking history without consent)",
     ],
-    region: "Pacific Northwest, select cities",
-    organizationExample: "BEST Safe Jobs Collaborative (Seattle), similar programs in select metro areas",
+    region: "Pacific Northwest (Seattle metro primary)",
+    organizationExample: "BEST Safe Jobs Collaborative (Seattle) — the originating model for this pathway type. King County employer network includes trained contacts in hospitality, healthcare admin, and light manufacturing.",
   },
   {
     id: "office-admin-certificate",
@@ -524,8 +528,8 @@ export const pathways = [
       "Assess preference for office size and culture (small vs. corporate)",
       "Prepare employment gap narrative with survivor before job search",
     ],
-    region: "national",
-    organizationExample: "Community colleges, WIOA-funded programs",
+    region: "Pacific Northwest",
+    organizationExample: "South Seattle College office administration certificate, Edmonds College Business Technology program, WIOA-funded through WorkSource Seattle-King County",
   },
   {
     id: "maitri-economic-empowerment",
@@ -558,7 +562,7 @@ export const pathways = [
       "Ensure survivor meets program intake criteria",
       "Coordinate with legal aid on record clearing eligibility",
     ],
-    region: "select cities",
-    organizationExample: "Maitri (Bay Area), similar programs in select regions",
+    region: "Pacific Northwest (check availability)",
+    organizationExample: "REST (Real Escape from the Sex Trade, Seattle) — offers economic empowerment components. YWCA Seattle-King County economic mobility program. Modeled on Maitri's Bay Area program.",
   },
 ];

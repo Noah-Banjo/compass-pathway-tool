@@ -7,9 +7,9 @@
 export const syntheticProfiles = [
   {
     id: "profile-maya",
-    label: "Maya, 24 — Southeast",
+    label: "Maya, 24 — Seattle metro",
     age: 24,
-    region: "Southeast US (Atlanta metro)",
+    region: "Pacific Northwest (Seattle — South King County)",
     educationLevel: "some-high-school",
     educationNote: "Completed 10th grade. Has not obtained GED.",
     employmentGapYears: 5,
@@ -39,7 +39,7 @@ export const syntheticProfiles = [
   },
   {
     id: "profile-darius",
-    label: "Darius, 31 — Pacific Northwest",
+    label: "Darius, 31 — King County",
     age: 31,
     region: "Pacific Northwest (Seattle metro)",
     educationLevel: "some-college",
@@ -71,9 +71,9 @@ export const syntheticProfiles = [
   },
   {
     id: "profile-sofia",
-    label: "Sofia, 27 — Midwest",
+    label: "Sofia, 27 — Seattle metro",
     age: 27,
-    region: "Midwest (Chicago metro)",
+    region: "Pacific Northwest (Renton, WA)",
     educationLevel: "high-school-diploma",
     educationNote: "High school diploma completed before trafficking situation.",
     employmentGapYears: 4,
@@ -104,9 +104,9 @@ export const syntheticProfiles = [
   },
   {
     id: "profile-keisha",
-    label: "Keisha, 22 — Northeast",
+    label: "Keisha, 22 — Tacoma area",
     age: 22,
-    region: "Northeast US (Philadelphia area)",
+    region: "Pacific Northwest (Tacoma, Pierce County)",
     educationLevel: "some-high-school",
     educationNote: "Left school in 11th grade. No GED.",
     employmentGapYears: 4,
@@ -137,9 +137,9 @@ export const syntheticProfiles = [
   },
   {
     id: "profile-james",
-    label: "James, 38 — Texas",
+    label: "James, 38 — Eastern Washington",
     age: 38,
-    region: "South (Houston area)",
+    region: "Pacific Northwest (Yakima, WA — Eastern Washington)",
     educationLevel: "ged",
     educationNote: "GED completed during incarceration on an unrelated charge (now expunged). Can document GED.",
     employmentGapYears: 2,
