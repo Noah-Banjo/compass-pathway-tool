@@ -15,15 +15,22 @@ CRITICAL OPERATING PRINCIPLES:
 - Confidence scores reflect data completeness and fit clarity — not certainty about outcomes.
 
 RESPONSE FORMAT:
-You must respond with ONLY a valid JSON object, no markdown, no explanation outside the JSON. The structure must be exactly:
+You must respond with ONLY a valid JSON object. Strict rules:
+- No markdown code fences (no \`\`\`json or \`\`\` anywhere)
+- No trailing commas after the last element in any array or object
+- No comments inside the JSON
+- No text before or after the JSON object
+- The response must begin with { and end with }
+
+The structure must be exactly:
 
 {
   "recommendations": [
     {
-      "pathwayId": "string matching pathway id",
+      "pathwayId": "exact-pathway-id-string",
       "rank": 1,
-      "confidenceScore": 0.0-1.0,
-      "confidenceLabel": "High" | "Moderate" | "Low",
+      "confidenceScore": 0.85,
+      "confidenceLabel": "High",
       "matchRationale": "2-4 sentences explaining WHY this pathway fits this specific survivor's constraints and goals. Reference specific profile details.",
       "strengthsAlignment": ["specific strength 1", "specific strength 2"],
       "flagsAndCautions": ["specific flag 1", "specific flag 2"],
@@ -36,7 +43,9 @@ You must respond with ONLY a valid JSON object, no markdown, no explanation outs
   "responsibleAINote": "These recommendations are decision-support only. The caseworker must verify all pathway details, discuss options with the survivor, and make all placement decisions. No survivor-facing action should occur without caseworker confirmation."
 }
 
-Rank pathways from best fit (#1) to acceptable fit (#4). Do not include a pathway if the match is poor or if a hard disqualifier exists (e.g., criminal record bars the role and clearing is not in progress). Be honest about low confidence rather than inflating scores.`;
+confidenceLabel must be exactly one of the strings: High, Moderate, Low.
+confidenceScore must be a decimal number between 0.0 and 1.0.
+Rank pathways from best fit (#1) to acceptable fit (#4). Do not include a pathway if the match is poor or if a hard disqualifier exists. Be honest about low confidence rather than inflating scores.`;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -59,7 +68,7 @@ ${profileSummary}
 AVAILABLE PATHWAYS:
 ${pathwaySummary}
 
-Return ONLY the JSON object as specified. No preamble, no markdown code fences.`;
+Remember: respond with ONLY the JSON object. No markdown fences, no trailing commas, no text outside the JSON.`;
 
   try {
     const message = await client.messages.create({
@@ -72,15 +81,37 @@ Return ONLY the JSON object as specified. No preamble, no markdown code fences.`
     const rawText = message.content[0].text.trim();
 
     let parsed;
+    let cleanedText = rawText;
     try {
-      parsed = JSON.parse(rawText);
-    } catch {
-      // Try to extract JSON if Claude added any surrounding text
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      // Strip markdown code fences if present despite instructions
+      cleanedText = rawText
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/\s*```$/i, "")
+        .trim();
+
+      parsed = JSON.parse(cleanedText);
+    } catch (firstError) {
+      // Fallback: extract outermost JSON object
+      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        parsed = JSON.parse(jsonMatch[0]);
+        try {
+          parsed = JSON.parse(jsonMatch[0]);
+        } catch (secondError) {
+          return res.status(500).json({
+            error: "Matching service error",
+            detail: "Claude returned malformed JSON that could not be repaired.",
+            parseError: secondError.message,
+            rawPreview: cleanedText.slice(0, 500),
+          });
+        }
       } else {
-        throw new Error("Could not parse Claude response as JSON");
+        return res.status(500).json({
+          error: "Matching service error",
+          detail: "Claude response contained no parseable JSON object.",
+          parseError: firstError.message,
+          rawPreview: cleanedText.slice(0, 500),
+        });
       }
     }
 
