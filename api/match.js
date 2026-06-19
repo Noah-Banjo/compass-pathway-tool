@@ -93,6 +93,15 @@ ${pathwaySummary}`;
     }
 
     const parsed = toolUse.input;
+    console.log("COMPASS_TOOL_INPUT:", JSON.stringify(parsed).slice(0, 1000));
+
+    if (!parsed.recommendations || !Array.isArray(parsed.recommendations)) {
+      return res.status(500).json({
+        error: "Matching service error",
+        detail: "Tool response missing recommendations array.",
+        rawPreview: JSON.stringify(parsed).slice(0, 500),
+      });
+    }
 
     // Enrich each recommendation with full pathway data
     parsed.recommendations = parsed.recommendations.map((rec) => {
