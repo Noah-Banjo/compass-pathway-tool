@@ -73,8 +73,8 @@ ${pathwaySummary}`;
 
   try {
     const message = await client.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 4096,
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 2048,
       system: SYSTEM_PROMPT,
       tools: [MATCH_TOOL],
       tool_choice: { type: "tool", name: "submit_pathway_recommendations" },
@@ -110,47 +110,33 @@ ${pathwaySummary}`;
   }
 }
 
-function buildProfileSummary(profile) {
-  return `
-Name/Identifier: ${profile.label || "Anonymous"}
-Age: ${profile.age}
-Region: ${profile.region}
-Education Level: ${profile.educationLevel} — ${profile.educationNote || ""}
-Employment Gap: ${profile.employmentGapYears} years. ${profile.employmentGapExplanation || ""}
-Work History: ${profile.workHistoryBefore || "None documented"}
-Criminal Record: ${profile.criminalRecord ? `YES — ${profile.criminalRecordDetail}` : "No criminal record"}
-Mobility Constraints: ${profile.mobilityConstraints?.join(", ") || "None documented"}
-Housing Status: ${profile.housingStatus}
-Dependents: ${profile.childrenOrDependents ? profile.dependentDetail : "None"}
-Trauma-Related Workplace Sensitivities: ${profile.traumaWorkplaceSensitivities?.join(", ") || "None documented"}
-Counseling Schedule: ${profile.counselingSchedule || "Not documented"}
-Languages: ${profile.languagesSpoken?.join(", ")}
-Immigration Status: ${profile.immigrationStatus}
-Readiness Assessment: ${profile.readinessAssessment}
-Stated Goals: ${profile.statedGoals}
-Caseworker Notes: ${profile.notes || "None"}
-`.trim();
+function buildProfileSummary(p) {
+  const lines = [
+    `${p.label || "Anonymous"} | Age:${p.age} | Region:${p.region}`,
+    `Education:${p.educationLevel}${p.educationNote ? " — " + p.educationNote : ""}`,
+    `Gap:${p.employmentGapYears}yr${p.employmentGapExplanation ? " — " + p.employmentGapExplanation : ""}`,
+    `Work history:${p.workHistoryBefore || "None"}`,
+    `Criminal record:${p.criminalRecord ? "YES — " + p.criminalRecordDetail : "None"}`,
+    `Mobility:${p.mobilityConstraints?.length ? p.mobilityConstraints.join(",") : "None"}`,
+    `Housing:${p.housingStatus} | Dependents:${p.childrenOrDependents ? p.dependentDetail : "None"}`,
+    `Trauma sensitivities:${p.traumaWorkplaceSensitivities?.join(",") || "None"}`,
+    `Counseling:${p.counselingSchedule || "Not documented"}`,
+    `Languages:${p.languagesSpoken?.join(",") || "Unknown"} | Immigration:${p.immigrationStatus}`,
+    `Readiness:${p.readinessAssessment}`,
+    `Goals:${p.statedGoals}`,
+    p.notes ? `Notes:${p.notes}` : null,
+  ];
+  return lines.filter(Boolean).join("\n");
 }
 
 function buildPathwaySummary() {
   return pathways
     .map(
-      (p) => `
-PATHWAY ID: ${p.id}
-Name: ${p.name}
-Category: ${p.category}
-Description: ${p.description}
-Accommodates: ${p.accommodates.join(", ")}
-Requires: ${p.requires.join(", ")}
-Remote Option: ${p.remoteOption}
-Flexible Schedule: ${p.flexibleSchedule}
-Physical Demand: ${p.physicalDemand}
-Supervisory Intensity: ${p.supervisoryIntensity}
-Earning Potential: ${p.earningPotential}
-Timeline: ${p.timeline}
-Trauma Considerations: ${p.traumaConsiderations}
-Region: ${p.region}
-`
+      (p) => `ID:${p.id} | ${p.name}
+Accommodates:${p.accommodates.join(",")} | Requires:${p.requires.join(",")}
+Remote:${p.remoteOption} | Flexible:${p.flexibleSchedule} | Physical:${p.physicalDemand} | Supervisory:${p.supervisoryIntensity}
+Earning:${p.earningPotential} | Timeline:${p.timeline} | Region:${p.region}
+Trauma:${p.traumaConsiderations}`
     )
     .join("\n---\n");
 }
