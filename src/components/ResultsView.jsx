@@ -1,7 +1,7 @@
 export function ResultsView({ results, statuses, onStatusChange, profileLabel }) {
   if (!results) return null;
 
-  const { recommendations, overallCaseNote, missingInformation, responsibleAINote } = results;
+  const { recommendations = [], overallCaseNote, missingInformation, responsibleAINote } = results;
 
   return (
     <div>

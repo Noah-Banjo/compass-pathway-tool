@@ -49,6 +49,10 @@ export default function App() {
       }
 
       const data = await res.json();
+      console.log("COMPASS_API_RESPONSE:", JSON.stringify(data));
+      if (!data.recommendations) {
+        throw new Error(`API returned unexpected shape: ${JSON.stringify(data).slice(0, 400)}`);
+      }
       setResults(data);
     } catch (e) {
       setError(e.message);
