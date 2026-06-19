@@ -12,40 +12,41 @@ CRITICAL OPERATING PRINCIPLES:
 - Never recommend a pathway that requires conditions the survivor clearly cannot meet (e.g., don't recommend CDL if survivor has no license and it's listed as required).
 - Criminal record complications must be flagged clearly and prominently.
 - Trauma workplace sensitivities must directly influence ranking and reasoning.
-- Confidence scores reflect data completeness and fit clarity — not certainty about outcomes.
+- Confidence scores reflect data completeness and fit clarity — not certainty about outcomes.`;
 
-RESPONSE FORMAT:
-You must respond with ONLY a valid JSON object. Strict rules:
-- No markdown code fences (no \`\`\`json or \`\`\` anywhere)
-- No trailing commas after the last element in any array or object
-- No comments inside the JSON
-- No text before or after the JSON object
-- The response must begin with { and end with }
-
-The structure must be exactly:
-
-{
-  "recommendations": [
-    {
-      "pathwayId": "exact-pathway-id-string",
-      "rank": 1,
-      "confidenceScore": 0.85,
-      "confidenceLabel": "High",
-      "matchRationale": "2-4 sentences explaining WHY this pathway fits this specific survivor's constraints and goals. Reference specific profile details.",
-      "strengthsAlignment": ["specific strength 1", "specific strength 2"],
-      "flagsAndCautions": ["specific flag 1", "specific flag 2"],
-      "verifyBeforeDiscussing": ["action 1", "action 2", "action 3"],
-      "traumaConsiderationNote": "Specific note about how this pathway's environment/structure relates to this survivor's documented sensitivities."
-    }
-  ],
-  "overallCaseNote": "1-2 sentence overall framing for this survivor's situation that a caseworker should keep in mind across all pathways.",
-  "missingInformation": ["piece of info 1", "piece of info 2"],
-  "responsibleAINote": "These recommendations are decision-support only. The caseworker must verify all pathway details, discuss options with the survivor, and make all placement decisions. No survivor-facing action should occur without caseworker confirmation."
-}
-
-confidenceLabel must be exactly one of the strings: High, Moderate, Low.
-confidenceScore must be a decimal number between 0.0 and 1.0.
-Rank pathways from best fit (#1) to acceptable fit (#4). Do not include a pathway if the match is poor or if a hard disqualifier exists. Be honest about low confidence rather than inflating scores.`;
+const MATCH_TOOL = {
+  name: "submit_pathway_recommendations",
+  description: "Submit ranked pathway recommendations for a survivor profile. Call this once with your complete analysis.",
+  input_schema: {
+    type: "object",
+    properties: {
+      recommendations: {
+        type: "array",
+        minItems: 2,
+        maxItems: 4,
+        items: {
+          type: "object",
+          properties: {
+            pathwayId: { type: "string", description: "Exact pathway id string from the provided list" },
+            rank: { type: "integer", minimum: 1, maximum: 4 },
+            confidenceScore: { type: "number", minimum: 0, maximum: 1 },
+            confidenceLabel: { type: "string", enum: ["High", "Moderate", "Low"] },
+            matchRationale: { type: "string", description: "2-4 sentences explaining WHY this pathway fits this specific survivor's constraints and goals, referencing specific profile details." },
+            strengthsAlignment: { type: "array", items: { type: "string" }, minItems: 1 },
+            flagsAndCautions: { type: "array", items: { type: "string" }, minItems: 1 },
+            verifyBeforeDiscussing: { type: "array", items: { type: "string" }, minItems: 2 },
+            traumaConsiderationNote: { type: "string", description: "Specific note about how this pathway's environment/structure relates to this survivor's documented sensitivities." },
+          },
+          required: ["pathwayId", "rank", "confidenceScore", "confidenceLabel", "matchRationale", "strengthsAlignment", "flagsAndCautions", "verifyBeforeDiscussing", "traumaConsiderationNote"],
+        },
+      },
+      overallCaseNote: { type: "string", description: "1-2 sentence overall framing for this survivor's situation that a caseworker should keep in mind across all pathways." },
+      missingInformation: { type: "array", items: { type: "string" } },
+      responsibleAINote: { type: "string" },
+    },
+    required: ["recommendations", "overallCaseNote", "missingInformation", "responsibleAINote"],
+  },
+};
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -60,61 +61,36 @@ export default async function handler(req, res) {
   const profileSummary = buildProfileSummary(profile);
   const pathwaySummary = buildPathwaySummary();
 
-  const userMessage = `Please analyze the following survivor profile and pathway options, then return your recommendations as JSON.
+  const userMessage = `Analyze the following survivor profile and pathway options, then call submit_pathway_recommendations with your complete analysis.
 
 SURVIVOR PROFILE:
 ${profileSummary}
 
 AVAILABLE PATHWAYS:
-${pathwaySummary}
-
-Remember: respond with ONLY the JSON object. No markdown fences, no trailing commas, no text outside the JSON.`;
+${pathwaySummary}`;
 
   try {
     const message = await client.messages.create({
       model: "claude-opus-4-8",
-      max_tokens: 2048,
+      max_tokens: 4096,
       system: SYSTEM_PROMPT,
+      tools: [MATCH_TOOL],
+      tool_choice: { type: "tool", name: "submit_pathway_recommendations" },
       messages: [{ role: "user", content: userMessage }],
     });
 
-    const rawText = message.content[0].text.trim();
-    console.log("COMPASS_RAW_RESPONSE:", rawText);
-
-    let parsed;
-    let cleanedText = rawText;
-    try {
-      // Strip markdown code fences if present despite instructions
-      cleanedText = rawText
-        .replace(/^```json\s*/i, "")
-        .replace(/^```\s*/i, "")
-        .replace(/\s*```$/i, "")
-        .trim();
-
-      parsed = JSON.parse(cleanedText);
-    } catch (firstError) {
-      // Fallback: extract outermost JSON object
-      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          parsed = JSON.parse(jsonMatch[0]);
-        } catch (secondError) {
-          return res.status(500).json({
-            error: "Matching service error",
-            detail: "Claude returned malformed JSON that could not be repaired.",
-            parseError: secondError.message,
-            rawPreview: cleanedText.slice(0, 500),
-          });
-        }
-      } else {
-        return res.status(500).json({
-          error: "Matching service error",
-          detail: "Claude response contained no parseable JSON object.",
-          parseError: firstError.message,
-          rawPreview: cleanedText.slice(0, 500),
-        });
-      }
+    const toolUse = message.content.find((b) => b.type === "tool_use");
+    if (!toolUse) {
+      const fallbackText = message.content.find((b) => b.type === "text")?.text || "(no content)";
+      console.error("COMPASS: No tool_use block in response. Content:", JSON.stringify(message.content));
+      return res.status(500).json({
+        error: "Matching service error",
+        detail: "Claude did not call the expected tool.",
+        rawPreview: fallbackText.slice(0, 500),
+      });
     }
+
+    const parsed = toolUse.input;
 
     // Enrich each recommendation with full pathway data
     parsed.recommendations = parsed.recommendations.map((rec) => {
