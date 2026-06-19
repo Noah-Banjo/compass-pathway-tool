@@ -34,12 +34,17 @@ export default function App() {
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        const msg = [
-          err.detail || err.error || "API error",
-          err.parseError ? `Parse error: ${err.parseError}` : null,
-          err.rawPreview ? `Raw response preview:\n${err.rawPreview}` : null,
-        ].filter(Boolean).join("\n\n");
+        let msg;
+        try {
+          const err = await res.json();
+          msg = [
+            err.detail || err.error || "API error",
+            err.parseError ? `Parse error: ${err.parseError}` : null,
+            err.rawPreview ? `Raw response preview:\n${err.rawPreview}` : null,
+          ].filter(Boolean).join("\n\n");
+        } catch {
+          msg = await res.text().catch(() => `HTTP ${res.status}`);
+        }
         throw new Error(msg);
       }
 
