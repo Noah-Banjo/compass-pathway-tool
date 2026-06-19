@@ -35,7 +35,12 @@ export default function App() {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.detail || err.error || "API error");
+        const msg = [
+          err.detail || err.error || "API error",
+          err.parseError ? `Parse error: ${err.parseError}` : null,
+          err.rawPreview ? `Raw response preview:\n${err.rawPreview}` : null,
+        ].filter(Boolean).join("\n\n");
+        throw new Error(msg);
       }
 
       const data = await res.json();
@@ -142,7 +147,7 @@ export default function App() {
             {error && (
               <div className="card" style={{ borderLeft: "4px solid var(--color-red-700)" }}>
                 <h3 style={{ color: "var(--color-red-700)" }}>Analysis error</h3>
-                <p className="mt-2" style={{ fontSize: "0.875rem" }}>{error}</p>
+                <pre className="mt-2" style={{ fontSize: "0.8125rem", whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: "inherit" }}>{error}</pre>
                 <button className="btn btn-secondary btn-sm mt-3" onClick={() => setActiveTab("intake")}>
                   Back to intake
                 </button>

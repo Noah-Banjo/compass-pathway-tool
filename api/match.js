@@ -79,6 +79,7 @@ Remember: respond with ONLY the JSON object. No markdown fences, no trailing com
     });
 
     const rawText = message.content[0].text.trim();
+    console.log("COMPASS_RAW_RESPONSE:", rawText);
 
     let parsed;
     let cleanedText = rawText;
