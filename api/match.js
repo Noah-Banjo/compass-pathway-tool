@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { pathways } from "../src/data/pathways.js";
 
+export const config = { maxDuration: 60 };
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const SYSTEM_PROMPT = `You are a specialized decision-support assistant for caseworkers at survivor support organizations. Your role is to analyze a survivor's profile and a set of available pathway/program types, then return a ranked list of 2–4 best-fit recommendations with explicit reasoning.
