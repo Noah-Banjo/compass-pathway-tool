@@ -83,6 +83,11 @@ ${buildPathwaySummary()}`;
 
     const parsed = toolUse.input;
 
+    // Haiku sometimes returns arrays as JSON-encoded strings — unwrap if needed
+    if (typeof parsed.recommendations === "string") {
+      try { parsed.recommendations = JSON.parse(parsed.recommendations); } catch { /* fall through to missing-array check */ }
+    }
+
     if (!parsed.recommendations || !Array.isArray(parsed.recommendations) || parsed.recommendations.length === 0) {
       return new Response(JSON.stringify({
         error: "Matching service error",
