@@ -5,45 +5,41 @@ export const config = { runtime: "edge" };
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `You are a decision-support assistant for caseworkers at survivor support organizations. Analyze a survivor profile and available pathways, then call the tool with 2-3 ranked recommendations. Be concise — keep all text fields to 1-2 sentences max. Never recommend pathways with hard disqualifiers. Flag criminal record barriers prominently.`;
+const SYSTEM_PROMPT = `You are a decision-support assistant for caseworkers at survivor support organizations. Analyze a survivor profile and pathway options, then return a ranked list of 2-3 best-fit recommendations.
 
-const MATCH_TOOL = {
-  name: "submit_pathway_recommendations",
-  description: "Submit ranked pathway recommendations. Fill the recommendations array first before any other fields.",
-  input_schema: {
-    type: "object",
-    properties: {
-      recommendations: {
-        type: "array",
-        minItems: 2,
-        maxItems: 3,
-        description: "FILL THIS FIRST. 2-3 best-fit pathways ranked by fit.",
-        items: {
-          type: "object",
-          properties: {
-            pathwayId:               { type: "string" },
-            rank:                    { type: "integer", minimum: 1, maximum: 3 },
-            confidenceScore:         { type: "number", minimum: 0, maximum: 1 },
-            confidenceLabel:         { type: "string", enum: ["High", "Moderate", "Low"] },
-            matchRationale:          { type: "string", description: "1-2 sentences: why this fits this survivor's specific constraints." },
-            strengthsAlignment:      { type: "array", maxItems: 2, items: { type: "string" } },
-            flagsAndCautions:        { type: "array", maxItems: 2, items: { type: "string" } },
-            verifyBeforeDiscussing:  { type: "array", maxItems: 2, items: { type: "string" } },
-            traumaConsiderationNote: { type: "string", description: "1 sentence on trauma environment fit." },
-          },
-          required: ["pathwayId", "rank", "confidenceScore", "confidenceLabel", "matchRationale", "strengthsAlignment", "flagsAndCautions", "verifyBeforeDiscussing", "traumaConsiderationNote"],
-        },
-      },
-      overallCaseNote:    { type: "string", description: "1 sentence framing for the caseworker." },
-      missingInformation: { type: "array", maxItems: 3, items: { type: "string" } },
-    },
-    required: ["recommendations", "overallCaseNote", "missingInformation"],
-  },
-};
+CRITICAL RULES:
+- Never recommend a pathway the survivor clearly cannot meet (hard disqualifiers).
+- Flag criminal record barriers prominently.
+- Trauma sensitivities must directly influence ranking.
+- Be concise — 1-2 sentences per text field.
+
+You must respond with ONLY a valid JSON object. No markdown fences, no text before or after. Start with { and end with }.
+
+{
+  "recommendations": [
+    {
+      "pathwayId": "exact-id-from-list",
+      "rank": 1,
+      "confidenceScore": 0.85,
+      "confidenceLabel": "High",
+      "matchRationale": "1-2 sentences on why this fits this specific survivor.",
+      "strengthsAlignment": ["strength 1", "strength 2"],
+      "flagsAndCautions": ["flag 1", "flag 2"],
+      "verifyBeforeDiscussing": ["verify 1", "verify 2"],
+      "traumaConsiderationNote": "1 sentence on trauma environment fit."
+    }
+  ],
+  "overallCaseNote": "1 sentence framing for the caseworker.",
+  "missingInformation": ["item 1"],
+  "responsibleAINote": "These recommendations are decision-support only. The caseworker must verify all pathway details, discuss options with the survivor, and make all placement decisions."
+}
+
+confidenceLabel must be exactly one of: High, Moderate, Low
+Return 2-3 recommendations only. Do not include pathways with hard disqualifiers.`;
 
 export default async function handler(request) {
   if (request.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { "Content-Type": "application/json" } });
+    return json({ error: "Method not allowed" }, 405);
   }
 
   let profile;
@@ -51,14 +47,14 @@ export default async function handler(request) {
     const body = await request.json();
     profile = body.profile;
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid request body" }), { status: 400, headers: { "Content-Type": "application/json" } });
+    return json({ error: "Invalid request body" }, 400);
   }
 
   if (!profile) {
-    return new Response(JSON.stringify({ error: "Profile is required" }), { status: 400, headers: { "Content-Type": "application/json" } });
+    return json({ error: "Profile is required" }, 400);
   }
 
-  const userMessage = `Analyze this survivor and call submit_pathway_recommendations. Fill recommendations array FIRST with 2-3 entries. Keep all text short (1-2 sentences).
+  const userMessage = `Analyze this survivor profile and return ONLY a JSON object with 2-3 ranked pathway recommendations. No markdown, no preamble.
 
 SURVIVOR:
 ${buildProfileSummary(profile)}
@@ -71,43 +67,70 @@ ${buildPathwaySummary()}`;
       model: "claude-sonnet-4-6",
       max_tokens: 3000,
       system: SYSTEM_PROMPT,
-      tools: [MATCH_TOOL],
-      tool_choice: { type: "tool", name: "submit_pathway_recommendations" },
       messages: [{ role: "user", content: userMessage }],
     });
 
-    const toolUse = message.content.find((b) => b.type === "tool_use");
-    if (!toolUse) {
-      return new Response(JSON.stringify({ error: "Matching service error", detail: "Claude did not call the expected tool.", stopReason: message.stop_reason }), { status: 500, headers: { "Content-Type": "application/json" } });
+    const rawText = message.content[0].text.trim();
+
+    // Strip markdown fences if present
+    const cleaned = rawText
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
+
+    let parsed;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch (firstErr) {
+      // Try extracting outermost JSON object
+      const match = cleaned.match(/\{[\s\S]*\}/);
+      if (match) {
+        try {
+          parsed = JSON.parse(match[0]);
+        } catch (secondErr) {
+          return json({
+            error: "Matching service error",
+            detail: "Response could not be parsed as JSON.",
+            parseError: secondErr.message,
+            rawPreview: cleaned.slice(0, 600),
+          }, 500);
+        }
+      } else {
+        return json({
+          error: "Matching service error",
+          detail: "No JSON object found in response.",
+          parseError: firstErr.message,
+          rawPreview: cleaned.slice(0, 600),
+        }, 500);
+      }
     }
 
-    const parsed = toolUse.input;
-
-    // Haiku sometimes returns arrays as JSON-encoded strings — unwrap if needed
-    if (typeof parsed.recommendations === "string") {
-      try { parsed.recommendations = JSON.parse(parsed.recommendations); } catch { /* fall through to missing-array check */ }
-    }
-
-    if (!parsed.recommendations || !Array.isArray(parsed.recommendations) || parsed.recommendations.length === 0) {
-      return new Response(JSON.stringify({
+    if (!parsed.recommendations || !Array.isArray(parsed.recommendations)) {
+      return json({
         error: "Matching service error",
-        detail: `Tool response missing recommendations. Stop reason: ${message.stop_reason}`,
+        detail: "Response missing recommendations array.",
         rawPreview: JSON.stringify(parsed).slice(0, 600),
-      }), { status: 500, headers: { "Content-Type": "application/json" } });
+      }, 500);
     }
 
-    parsed.responsibleAINote = "These recommendations are decision-support only. The caseworker must verify all pathway details, discuss options with the survivor, and make all placement decisions. No survivor-facing action should occur without caseworker confirmation.";
+    parsed.recommendations = parsed.recommendations.map((rec) => ({
+      ...rec,
+      pathway: pathways.find((p) => p.id === rec.pathwayId),
+    }));
 
-    parsed.recommendations = parsed.recommendations.map((rec) => {
-      const pathway = pathways.find((p) => p.id === rec.pathwayId);
-      return { ...rec, pathway };
-    });
-
-    return new Response(JSON.stringify(parsed), { status: 200, headers: { "Content-Type": "application/json" } });
+    return json(parsed, 200);
   } catch (error) {
     console.error("Claude API error:", error);
-    return new Response(JSON.stringify({ error: "Matching service error", detail: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
+    return json({ error: "Matching service error", detail: error.message }, 500);
   }
+}
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 function buildProfileSummary(p) {
