@@ -1,5 +1,4 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { pathways } from "../src/data/pathways.js";
 
 export const config = { runtime: "edge" };
 
@@ -113,11 +112,6 @@ ${buildPathwaySummary()}`;
         rawPreview: JSON.stringify(parsed).slice(0, 600),
       }, 500);
     }
-
-    parsed.recommendations = parsed.recommendations.map((rec) => ({
-      ...rec,
-      pathway: pathways.find((p) => p.id === rec.pathwayId),
-    }));
 
     return json(parsed, 200);
   } catch (error) {

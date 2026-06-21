@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ProfileSelector } from "./components/ProfileSelector";
 import { ResultsView } from "./components/ResultsView";
 import { FeedbackLog } from "./components/FeedbackLog";
+import { pathways } from "./data/pathways.js";
 
 const TABS = [
   { id: "intake", label: "Case Intake" },
@@ -49,10 +50,14 @@ export default function App() {
       }
 
       const data = await res.json();
-      console.log("COMPASS_API_RESPONSE:", JSON.stringify(data));
       if (!data.recommendations) {
         throw new Error(`API returned unexpected shape: ${JSON.stringify(data).slice(0, 400)}`);
       }
+      // Enrich recommendations with full pathway data client-side
+      data.recommendations = data.recommendations.map((rec) => ({
+        ...rec,
+        pathway: pathways.find((p) => p.id === rec.pathwayId),
+      }));
       setResults(data);
     } catch (e) {
       setError(e.message);
