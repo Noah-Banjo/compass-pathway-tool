@@ -68,8 +68,8 @@ ${buildPathwaySummary()}`;
 
   try {
     const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 2500,
+      model: "claude-sonnet-4-6",
+      max_tokens: 3000,
       system: SYSTEM_PROMPT,
       tools: [MATCH_TOOL],
       tool_choice: { type: "tool", name: "submit_pathway_recommendations" },
